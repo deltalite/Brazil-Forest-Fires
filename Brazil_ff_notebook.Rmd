@@ -1,0 +1,23 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Here I will be annotating my process for creating my shiny app. The app will be capable of generating maps (ideally cloropleths) for the Amazon/Brazil Forest fire data.
+
+I was initially going to download geojson for Brazil's provinces, but soon after found that the makers of ggplot also created ggspatial. 
+
+I will be creating a list of my dependencies in a R file seperate from app.R so be sure to have all the necessary packages if you'd like to try out my app.
+
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
