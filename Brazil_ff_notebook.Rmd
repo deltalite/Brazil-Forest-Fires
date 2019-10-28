@@ -7,7 +7,7 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 
 Here I will be annotating my process for creating my shiny app. The app will be capable of generating maps (ideally cloropleths) for the Amazon/Brazil Forest fire data.
 
-I was initially going to download geojson for Brazil's provinces, but soon after found that the makers of ggplot also created ggspatial. 
+I was initially going to download geojson for Brazil's provinces, but soon after found that the makers of ggplot also created ggmap. ggmap allows fairly easy mapping without the need to download geographic data directly. I might change using this down the road since I wouldn't want to publish my API key or get charged if someone were to make a large amount of requests to my account. I'll cross that bridge when I get there. 
 
 I will be creating a list of my dependencies in a R file seperate from app.R so be sure to have all the necessary packages if you'd like to try out my app.
 
