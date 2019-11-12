@@ -13,12 +13,36 @@ After a bit of searching, I've discovered the CRAN package "brazilmaps", however
 
 Recently I've been busy with fencing (training and tournaments), working on my resume and other personal (non-coding) projects. My work term report for this coop term is also on my mind.
 
+Now that I've gotten a handle on the format of brazil maps and can map by state:
+```{r}
+library(brazilmaps)
+map_states <- get_brmap(geo = "State", class = "sf")
+plot_brmap(map_states)
+```
+I need to determine how to overlap this data with the Kaggle data. Looking at map_states' names, I found "nome" (name in Portuguese) and "state" from the Kaggle data overlap. Great, and they can be joined fairly easily with the plot_brmap function, given some extra parameters.
+
+```{r}
+library(brazilmaps)
+BR_fire_data <- read.csv('../amazon.csv')
+map_states <- get_brmap(geo = "State", class = "sf")
+plot_brmap(map_states,
+           data_to_join = BR_fire_data,
+           join_by = c('nome'='state'),
+           var = 'Forest Fires 2018')
+```
+
+While this does show a cloropleth map, it doesn't show as many provinces as we might have expected. Maybe there's a discresion in the names - let's check.
+With setdiff(levels(map_states$nome),levels(BR_fire_data$state)), we see that some of the provinces have accents and that one of the datasets is all in caps.
+Even after we change this, we see the Kaggle data says Rio instead of brazilmaps' "RIO DE JANEIRO", "RIO GRANDE DO NORTE" and "RIO GRANDE DO SUL".
+
+setdiff(levels(map_states$nome),levels(BR_fire_data$state))
+
+
+
 I will be creating a list of my dependencies in a R file seperate from app.R so be sure to have all the necessary packages if you'd like to try out my app.
 
 
-```{r}
-plot(cars)
-```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
