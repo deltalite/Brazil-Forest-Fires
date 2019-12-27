@@ -1,5 +1,6 @@
 sandbox.Rmd
 sandbox.nb.html
 
+*.xlsx
 *.RData
 *.Rhistory

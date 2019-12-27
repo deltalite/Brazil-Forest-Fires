@@ -20,6 +20,7 @@ Recently I've been busy with fencing (training and tournaments), working on my r
 Now that I've gotten a handle on the format of brazil maps and can map by state:
 ```{r, message=F}
 library(brazilmaps)
+library(dplyr)
 # must be loaded for get_brmap to work
 library(sf)
 map_states <- get_brmap(geo = "State", class = "sf")
@@ -81,6 +82,73 @@ cat(
     )
   )
 ```
+
+A quick check of Wikipedia tells us that that Piaui is correct, not Piau. It also appears that there is 'duplicate' data for RIO and MATO GROSSO which indicates that data for all 3 Rios and 2 Mato Grossos exist, despite their labelling. The only remaining states that aren't understood are PARA and PARANA.
+
+Let's reload and examine how many each state occurs in the Kaggle data.
+
+```{r}
+BR_fire_data <- read.csv('../amazon.csv')
+BR_fire_data %>% 
+  group_by(state) %>%
+  summarise(no_rows = length(state))
+```
+
+The reason for reloading was because 'Pará' actually produced an error from our earlier transformations. PARANA must have been labelled as Paraiba, since it's the only unexplained double-count factor. 
+
+So how should we handle this imperfect mapping? If it was complex, it might be easier to leave the data as is or to join the duplicate data. We won't do this because the problem isn't too challenging and some of the mislabelled geographies such as the three Rios are NOT close. Let's cross-reference the data with another reliable source. Note that the data does not line up exactly.
+
+Using a visualization from [globalforestwatch](http://fires.globalforestwatch.org/report/index.html#aoitype=GLOBAL&reporttype=globalcountryreport&country=Brazil&dates=fYear-2019!fMonth-6!fDay-1!tYear-2019!tMonth-11!tDay-27), here are the total number of fires for 2003 for our provinces of interest:
+
+Province | GFW Fires in 2003
+------------- | -------------
+Rio de Janeiro | 1,786
+Rio Grande do Norte | 2,139
+Rio Grande do Sul | 7,037
+Parana | 12,756
+Paraiba | 2,190
+Mato Grosso | 10,737
+Mato Grosso do Sul | 150,256
+
+Now I'll add the suspected Kaggle data to each column. Rio de Janeiro and Rio Grande do Norte have somewhat similar numbers, so the comparison will be done with 2003 and 2017 data.
+
+Province | GFW Fires,2003 | Kaggle Fires,2003 | GFW Fires,2007 | Kaggle Fires,2007
+------------- | ------------- | ------------- | ------------- | -------------
+Rio de Janeiro | 1,786 | 553 | 2,400 | 621 
+Rio Grande do Norte | 2,139 | 1,262 | 1,230 | 463
+Rio Grande do Sul | 7,037 | 3,041 | 3,488 | 983
+Parana | 12,756 | 6,980 | 7,028 | 2,057
+Paraiba | 2,190 | 1,381 | 1,430 | 608
+Mato Grosso | 10,737 | 4,130 | 21,782 | 7,747
+Mato Grosso do Sul | 150,256 | 35,406 | 164,789 | 44,406
+
+Although there is some difference in how much the provinces differ, these two comparisons make it look like my inference is correct. If GRW provided me with their data, the comparison could be done with more points or with visualization to make my assumptions more convincing. 
+
+The date column isn't all that necessary -- month and year are present, and you might notice that the data provider also didn't provide correct dates - they are all January 1 of whatever year. The column might otherwise be worth having, but that discreptency makes it useless. I'll work with the year and month which are consistant. 
+
+After looking at the number of fires columns, you might also notice that a period is used in certain instances, often in groups and close to numbers close to 1000. This indicates they are being used in place of a comma or nothing since it's supposed to be an integer. So transformations like $1.234 \rightarrow 1234$ must be made. 
+
+Initially, you might think replacing '.' with '' will deal with our problem, however it does not -- there are some points with only one or two decimals. They must have ended in zero. It's hard to find those with the off chance of being a multiple of 1000, but you can do a quick visual sweep of small numbers in the middle of numbers in the thousands after transforming the simple ones. The change $1.23 \rightarrow 1230$ may seem daunting if:
+
+1. You were to change all 800+ manually.
+2. You are not experienced with these weird preprocessing problems.
+
+Luckily, there's something called $\textit{Regular Expressions}$ (RegEx).
+
+After the transformations we layed out are complete (renaming, capitalizing and adding accents), the original data becomes amazon_en.csv. 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
