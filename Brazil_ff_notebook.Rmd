@@ -11,7 +11,7 @@ options(warn=-1)
 
 This notebook is for annotating my process for creating my shiny app. The app will be capable of generating maps (ideally cloropleths) for the Amazon/Brazil Forest fire data.
 
-I was initially going to download geojson for Brazil's provinces, but soon after found that the makers of ggplot also created ggmap. ggmap allows fairly easy mapping without the need to download geographic data directly. I might change using this down the road since I wouldn't want to publish my API key or get charged if someone were to make a large amount of requests to my account. 
+I was initially going to download geojson for Brazil's states, but soon after found that the makers of ggplot also created ggmap. ggmap allows fairly easy mapping without the need to download geographic data directly. I might change using this down the road since I wouldn't want to publish my API key or get charged if someone were to make a large amount of requests to my account. 
 
 After a bit of searching, I've discovered the CRAN package "brazilmaps", however this is not a widely used package and uses S4 objects, which I am not yet familiar with. That's the next thing to learn about so that I can actually make the cloropleth which is by far the graph most foreign to me. The rest I've implemented before at work and will work on once I have more time. 
 
@@ -40,10 +40,10 @@ plot_brmap(map_states,
            var = 'number')
 ```
 
-While this does show a cloropleth map, it doesn't show as many provinces as we might have expected. Maybe there's a discresion in the names - let's check.
+While this does show a cloropleth map, it doesn't show as many states as we might have expected. Maybe there's a discresion in the names - let's check.
 
 ```{r}
-# Print the province names from each vector of factors
+# Print the state names from each vector of factors
 cat(paste('Levels from Kaggle data:',
           paste0(levels(BR_fire_data$state), collapse=", "),
           '',
@@ -98,9 +98,9 @@ The reason for reloading was because 'Pará' actually produced an error from our
 
 So how should we handle this imperfect mapping? If it was complex, it might be easier to leave the data as is or to join the duplicate data. We won't do this because the problem isn't too challenging and some of the mislabelled geographies such as the three Rios are NOT close. Let's cross-reference the data with another reliable source. Note that the data does not line up exactly.
 
-Using a visualization from [globalforestwatch](http://fires.globalforestwatch.org/report/index.html#aoitype=GLOBAL&reporttype=globalcountryreport&country=Brazil&dates=fYear-2019!fMonth-6!fDay-1!tYear-2019!tMonth-11!tDay-27), here are the total number of fires for 2003 for our provinces of interest:
+Using a visualization from [globalforestwatch](http://fires.globalforestwatch.org/report/index.html#aoitype=GLOBAL&reporttype=globalcountryreport&country=Brazil&dates=fYear-2019!fMonth-6!fDay-1!tYear-2019!tMonth-11!tDay-27), here are the total number of fires for 2003 for our states of interest:
 
-Province | GFW Fires in 2003
+State | GFW Fires in 2003
 ------------- | -------------
 Rio de Janeiro | 1,786
 Rio Grande do Norte | 2,139
@@ -112,7 +112,7 @@ Mato Grosso do Sul | 150,256
 
 Now I'll add the suspected Kaggle data to each column. Rio de Janeiro and Rio Grande do Norte have somewhat similar numbers, so the comparison will be done with 2003 and 2017 data.
 
-Province | GFW Fires,2003 | Kaggle Fires,2003 | GFW Fires,2007 | Kaggle Fires,2007
+State | GFW Fires,2003 | Kaggle Fires,2003 | GFW Fires,2007 | Kaggle Fires,2007
 ------------- | ------------- | ------------- | ------------- | -------------
 Rio de Janeiro | 1,786 | 553 | 2,400 | 621 
 Rio Grande do Norte | 2,139 | 1,262 | 1,230 | 463
@@ -122,7 +122,7 @@ Paraiba | 2,190 | 1,381 | 1,430 | 608
 Mato Grosso | 10,737 | 4,130 | 21,782 | 7,747
 Mato Grosso do Sul | 150,256 | 35,406 | 164,789 | 44,406
 
-Although there is some difference in how much the provinces differ, these two comparisons make it look like my inference is correct. If GRW provided me with their data, the comparison could be done with more points or with visualization to make my assumptions more convincing. 
+Although there is some difference in how much the states differ, these two comparisons make it look like my inference is correct. If GRW provided me with their data, the comparison could be done with more points or with visualization to make my assumptions more convincing. 
 
 The date column isn't all that necessary -- month and year are present, and you might notice that the data provider also didn't provide correct dates - they are all January 1 of whatever year. The column might otherwise be worth having, but that discreptency makes it useless. I'll work with the year and month which are consistant. 
 
@@ -145,25 +145,30 @@ ie. "$1$200", "$1$20" and "$1$2" for the above situations.
 Now how might we find a number that should actually be #.000 only the ".000" isn't there? Well, we can do a check using regex but we won't know for sure. Before doing that, sort the data by Month,Year,State so that we see the data in sequence, by state. This is important for spotting odd numbers in context. Here's the Regex search I used: 
 
 \begin{align}
-,\d{3,4}\n\d*,(\w*,){2}\d\n\d*,(\w*,){2}\d{3,4} \\
-\text{where I'm searching for a single digit number preceeded and followed by a 3-4 digit number. The same principle can be used to search for a number like 55000.}
+,\setminus d\{3,4\}\setminus n\setminus d*,(\setminus w*,)\{2\}\setminus d\setminus n\setminus d*,(\setminus w*,)\{2\}\setminus d\{3,4\}
 \end{align}
+
+where I'm searching for a single digit number preceeded and followed by a 3-4 digit number. The same principle can be used to search for a number like 55000.
 
 There are 4 matches, but the only one I'd be confident changing would be the middle row below:
 
-2012,MARANHAO,September,7626
-2012,MARANHAO,October,5     (should probably be 5000)
-2012,MARANHAO,November,2010
+Year | State | Month | Number of Fires
+------------- | ------------- | ------------- | -------------
+2012 | MARANHAO | September | 7626
+2012 | MARANHAO | October | 5     (should probably be 5000)
+2012 | MARANHAO | November | 2010
 
 The following also looks suspicious, but I'll attribute that to a measurement error - jumping to 5000 seems unlikely given surrounding numbers.
 
-2009,MARANHAO,October,1861
-2009,MARANHAO,November,5
-2009,MARANHAO,December,1768
+Year | State | Month | Number of Fires
+------------- | ------------- | ------------- | -------------
+2009 | MARANHAO | October | 1861
+2009 | MARANHAO | November | 5
+2009 | MARANHAO | December | 1768
 
 I dug a bit deeper into other possible multiples of 1000 but did not see anything I previously missed.
 
-After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes amazon_en.csv. 
+After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes data.csv. 
 
 
 
