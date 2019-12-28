@@ -5,7 +5,7 @@ output: html_notebook
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "C:/Users/dex78/Documents/Dexter/Projects/Brazil-Forest-Fires-2018/forest_fire_app")
+knitr::opts_knit$set(root.dir = "C:/Users/dex78/Documents/Dexter/Projects/Brazil-Forest-Fires/forest_fire_app")
 options(warn=-1)
 ```
 
@@ -32,7 +32,7 @@ I need to determine how to overlap this data with the Kaggle data. Looking at ma
 Great, now to test how our current data maps onto the states. This can be joined done with the plot_brmap function, given some extra parameters:
 
 ```{r, warning=F}
-BR_fire_data <- read.csv('../amazon.csv')
+BR_fire_data <- read.csv('../data/original.csv')
 BR_fire_data$state <- as.factor(toupper(BR_fire_data$state))
 plot_brmap(map_states,
            data_to_join = BR_fire_data,
@@ -88,7 +88,7 @@ A quick check of Wikipedia tells us that that Piaui is correct, not Piau. It als
 Let's reload and examine how many each state occurs in the Kaggle data.
 
 ```{r}
-BR_fire_data <- read.csv('../amazon.csv')
+BR_fire_data <- read.csv('../data/original.csv')
 BR_fire_data %>% 
   group_by(state) %>%
   summarise(no_rows = length(state))
@@ -135,7 +135,7 @@ Initially, you might think replacing '.' with '' will deal with our problem, how
 
 Luckily, there's something called $\textit{Regular Expressions}$ (RegEx) that can be used to solve this. This [Medium article by Jonny Fox](https://medium.com/factory-mind/regex-tutorial-a-simple-cheatsheet-by-examples-649dc1c3f285) does a great job at introducing the topic, but I will assume the reader knows basic regex. The following are the steps used to transform the numbers in the data set:
 
-1. Open the amazon csv file in a text editor with RegEx Find & Replace.
+1. Open the original csv file (data folder) in a text editor with RegEx Find & Replace.
 2. Search for the desired numbers using RegEx 
    "#.#," found by "(\d)\.(\d)" where the round brackets are used for grouping
    Similarly "#.##," and "#.###," can be found using "(\d)\.(\d{2})" and "(\d)\.(\d{2})", respectively.
@@ -168,7 +168,7 @@ Year | State | Month | Number of Fires
 
 I dug a bit deeper into other possible multiples of 1000 but did not see anything I previously missed.
 
-After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes data.csv. 
+After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes amazon.csv. 
 
 
 
