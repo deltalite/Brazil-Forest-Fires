@@ -128,14 +128,42 @@ The date column isn't all that necessary -- month and year are present, and you 
 
 After looking at the number of fires columns, you might also notice that a period is used in certain instances, often in groups and close to numbers close to 1000. This indicates they are being used in place of a comma or nothing since it's supposed to be an integer. So transformations like $1.234 \rightarrow 1234$ must be made. 
 
-Initially, you might think replacing '.' with '' will deal with our problem, however it does not -- there are some points with only one or two decimals. They must have ended in zero. It's hard to find those with the off chance of being a multiple of 1000, but you can do a quick visual sweep of small numbers in the middle of numbers in the thousands after transforming the simple ones. The change $1.23 \rightarrow 1230$ may seem daunting if:
+Initially, you might think replacing '.' with '' will deal with our problem, however it does not -- there are some points with only one or two decimals. They must have ended in zero. It's hard to find those with the off chance of being a multiple of 1000, but we'll cross that bridge when we get there. The change $1.23 \rightarrow 1230$ may seem daunting if:
 
 1. You were to change all 800+ manually.
 2. You are not experienced with these weird preprocessing problems.
 
-Luckily, there's something called $\textit{Regular Expressions}$ (RegEx).
+Luckily, there's something called $\textit{Regular Expressions}$ (RegEx) that can be used to solve this. This [Medium article by Jonny Fox](https://medium.com/factory-mind/regex-tutorial-a-simple-cheatsheet-by-examples-649dc1c3f285) does a great job at introducing the topic, but I will assume the reader knows basic regex. The following are the steps used to transform the numbers in the data set:
 
-After the transformations we layed out are complete (renaming, capitalizing and adding accents), the original data becomes amazon_en.csv. 
+1. Open the amazon csv file in a text editor with RegEx Find & Replace.
+2. Search for the desired numbers using RegEx 
+   "#.#," found by "(\d)\.(\d)" where the round brackets are used for grouping
+   Similarly "#.##," and "#.###," can be found using "(\d)\.(\d{2})" and "(\d)\.(\d{2})", respectively.
+3. Use your groups combined with any supplementary "0"s to properly format the numbers.
+ie. "$1$200", "$1$20" and "$1$2" for the above situations.
+
+Now how might we find a number that should actually be #.000 only the ".000" isn't there? Well, we can do a check using regex but we won't know for sure. Before doing that, sort the data by Month,Year,State so that we see the data in sequence, by state. This is important for spotting odd numbers in context. Here's the Regex search I used: 
+
+\begin{align}
+,\d{3,4}\n\d*,(\w*,){2}\d\n\d*,(\w*,){2}\d{3,4} \\
+\text{where I'm searching for a single digit number preceeded and followed by a 3-4 digit number. The same principle can be used to search for a number like 55000.}
+\end{align}
+
+There are 4 matches, but the only one I'd be confident changing would be the middle row below:
+
+2012,MARANHAO,September,7626
+2012,MARANHAO,October,5     (should probably be 5000)
+2012,MARANHAO,November,2010
+
+The following also looks suspicious, but I'll attribute that to a measurement error - jumping to 5000 seems unlikely given surrounding numbers.
+
+2009,MARANHAO,October,1861
+2009,MARANHAO,November,5
+2009,MARANHAO,December,1768
+
+I dug a bit deeper into other possible multiples of 1000 but did not see anything I previously missed.
+
+After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes amazon_en.csv. 
 
 
 
