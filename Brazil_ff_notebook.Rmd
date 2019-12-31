@@ -19,6 +19,7 @@ Now that I've gotten a handle on the format of brazil maps and can map by state:
 ```{r, message=F}
 library(brazilmaps)
 library(dplyr)
+library(ggplot2)
 # must be loaded for get_brmap to work
 library(sf)
 map_states <- get_brmap(geo = "State", class = "sf")
@@ -168,9 +169,30 @@ I dug a bit deeper into other possible multiples of 1000 but did not see anythin
 
 After the transformations we layed out are complete (renaming, capitalizing, adding accents and reformatting numbers), the original data becomes amazon.csv. 
 
+Here is the graph we tried to make at the start of this file:
 
+```{r}
+# must specify the incoding, or the accents won't be read properly
+BR_fire_data <- read.csv('../data/amazon.csv', encoding="UTF-8")
+BR_fire_data$state <- as.factor(BR_fire_data$state)
+map_states <- get_brmap(geo = "State", class = "sf")
+plot_brmap(map_states,
+           data_to_join = BR_fire_data,
+           join_by = c('nome'='state'),
+           var = 'Number.of.Fires',) + 
+  scale_fill_gradientn(limits = c(0,10000),
+                       colours=c("#FFFF00", "#FF0000")
+                       )
+```
 
+Now that the hard work has been done (besides the data, I've also been having problems with brazilmaps), we can begin producing more standard graphs. Our graph above doesn't look quite right, but that can be examined at a later time. I'm not completely sure of how the data was aggregated, but the graph looks more or less as desired. If you ran this yourself, you'd probably realize it's incredibly slow. An improvement I plan to make is taking the data and ploting it with my own function.In preparation of that, I've added the Brazilian state data taken from the [brazilmaps](https://github.com/rpradosiqueira/brazilmaps) repo in the data folder.
 
+```{r}
+# basic states
+plot(st_geometry(readRDS('data/brazil_states.Rds')))
+```
+
+It could simply be that aggregating the data takes a long time, but it seems likely that it's the fault of the function - I've made several graphs in R with larger data and they didn't cause long wait times. I can test this out with a simple table of data with the states, but I'm going to move on to plotting other graphs.
 
 
 

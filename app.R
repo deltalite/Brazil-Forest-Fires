@@ -1,5 +1,6 @@
 library(shiny)
 library(dplyr)
+library(sf)
 library(ggplot2)
 # library(ggrepel)
 library(brazilmaps)
@@ -12,13 +13,13 @@ names(PLOT_TYPES) <- c('Bar', 'Cloropleth', 'Line', 'Scatter')
 MONTHS <- c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
 SELECT_YEAR <- "Select a year: "
 
-BR_fire_data <- read.csv('../data/amazon.csv')
-BR_fire_data$state <- as.factor(toupper(BR_fire_data$state))
+BR_fire_data <- read.csv('../data/amazon.csv', encoding="UTF-8")
+BR_fire_data$state <- as.factor(BR_fire_data$state)
 map_states <- get_brmap(geo = "State", class = "sf")
 plot_brmap(map_states,
            data_to_join = BR_fire_data,
            join_by = c('nome'='state'),
-           var = 'Forest Fires 2018')
+           var = 'Number.of.Fires')
 
 ui <- fluidPage(
   titlePanel("Brazil Forest Fires"),
@@ -46,13 +47,13 @@ server <- function(input, output) {
   
 }
 
-plot_brmap(map_states,
-           data_to_join = BR_fire_data,
-           join_by = c('nome'='state'),
-           var = 'Forest Fires 2018')
+# plot_brmap(map_states,
+#            data_to_join = BR_fire_data,
+#            join_by = c('nome'='state'),
+#            var = 'Forest Fires 2018')
 
-map_states <- get_brmap(geo = "State", class = "sf")
-plot_brmap(map_states)
+# map_states <- get_brmap(geo = "State", class = "sf")
+# plot_brmap(map_states)
 
 
 shinyApp(ui = ui, server = server)
