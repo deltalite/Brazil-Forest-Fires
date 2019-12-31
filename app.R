@@ -2,18 +2,22 @@ library(shiny)
 library(dplyr)
 library(sf)
 library(ggplot2)
+library(shinyWidgets)
 # library(ggrepel)
 library(brazilmaps)
 # library(tidyverse)
 
 
 # Constants
-PLOT_TYPES <- c('bar', 'cloropleth', 'line', 'scatter')
-names(PLOT_TYPES) <- c('Bar', 'Cloropleth', 'Line', 'Scatter')
+GRAPH_GENERAL_TYPE <- c('Comparison', 'Composition', 'Map', 'Distribution')
+COMPARISON_OPTS <-  c('Bar Graph', 'Boxplot', 'Line Graph', 'Scatterplot - Jitter')
+COMPOSITION_OPTS <-  c('Bar Graph', 'Pie Chart', 'Treemap') # coord_flip()
+DISTRIBUTION_OPTS <-  c('Histogram')
+MAP_OPTS <- c('Choropleth Map')
 MONTHS <- c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
 SELECT_YEAR <- "Select a year: "
 
-BR_fire_data <- read.csv('../data/amazon.csv', encoding="UTF-8")
+BR_fire_data <- read.csv('data/amazon.csv', encoding="UTF-8")
 BR_fire_data$state <- as.factor(BR_fire_data$state)
 map_states <- get_brmap(geo = "State", class = "sf")
 plot_brmap(map_states,
@@ -27,7 +31,11 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       
-      radioButtons('plot_choice', 'Select a graph type:', choices = PLOT_TYPES, selected = 'bar'),
+      selectizeInput(inputId = 'general_plot_type',
+                     label = 'Select a general graph type:', 
+                     choices = GRAPH_GENERAL_TYPE, selected = 'bar'),
+      uiOutput("specific_plot_type"),
+      # Turn to dropdown checkbox
       selectizeInput(inputId = "select_year",
                      label = SELECT_YEAR, 
                      choices = 1998:2017, 
