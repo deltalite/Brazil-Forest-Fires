@@ -13,4 +13,4 @@ runGitHub("Brazil-Forest-Fires", "deltalite")
 Use the command install.packages("<package name>") to install any packages you don't have locally. If you've downloaded the repo, RStudio should also prompt you to install any packages you are missing.
 
 ## Visualization
-This will not be my first Shiny app, but will certainly be a good exercise for visualizing spatial data, as well as using other graphs to compare the impact in different regions. 
+This will not be my first Shiny app, but will certainly be a good exercise for visualizing spatial data, as well as using other graphs to compare the impact in different regions of Brazil. 

@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "Brazil Forest Fires"
 output: html_notebook
 ---
 
@@ -9,7 +9,11 @@ knitr::opts_knit$set(root.dir = "C:/Users/dex78/Documents/Dexter/Projects/Brazil
 options(warn=-1)
 ```
 
+## Intro
+
 This notebook is for annotating my process for creating my Shiny web app. The app will be capable of generating graphs and maps from the Amazon/Brazil forest fire data.
+
+## Choropleth Map
 
 I was initially going to download geojson for Brazil's states, but thought that there was probably a simpler soloution. Soon after, I found that the makers of ggplot also created ggmap. ggmap allows fairly easy mapping without the need to download geographic data directly, instead using Google APIs. While this would enable me to create nice maps with zoom and drag capabilities, I would like people using the app to easily start it up without creating their own API keys. I'm not about to publish my API key on Github because Google could charge me if someone were to abuse it. Alternatively, I could host the project online and hide the key on Github, but I won't for now. ggmap is not looking ideal for this project, so I will continue to look for other options. 
 
@@ -38,6 +42,8 @@ plot_brmap(map_states,
            join_by = c('nome'='state'),
            var = 'number')
 ```
+
+### Preprocessing
 
 While this does show a cloropleth map, it doesn't show as many states as we might have expected. Maybe there's a discresion in the names - let's check.
 
@@ -185,14 +191,19 @@ plot_brmap(map_states,
                        )
 ```
 
+### Considerations
+
 Now that the hard work has been done (besides the data, I've also been having problems with brazilmaps), we can begin producing more standard graphs. Our graph above doesn't look quite right, but that can be examined at a later time. I'm not completely sure of how the data was aggregated, but the graph looks more or less as desired. If you ran this yourself, you'd probably realize it's incredibly slow. An improvement I plan to make is taking the data and ploting it with my own function.In preparation of that, I've added the Brazilian state data taken from the [brazilmaps](https://github.com/rpradosiqueira/brazilmaps) repo in the data folder.
 
 ```{r}
-# basic states
+# basic plot of Brazilian states
 plot(st_geometry(readRDS('data/brazil_states.Rds')))
 ```
 
-It could simply be that aggregating the data takes a long time, but it seems likely that it's the fault of the function - I've made several graphs in R with larger data and they didn't cause long wait times. I can test this out with a simple table of data with the states, but I'm going to move on to plotting other graphs.
+There are multiple reasons the brazilmaps plotting could be slow. It could simply be that aggregating the data takes a long time, ggplot is slow with the geom_polygons or maybe it's the fault of the function's implementation. I've made several graphs in R with larger data and they didn't cause such long wait times, however I have not attempted choropleths with ggplot before. I can test this out with a simple table of data with the states, but I'm going to move on to plotting other graphs.
+
+
+## Menu for Graph Creation
 
 
 
