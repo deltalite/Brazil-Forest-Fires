@@ -1,4 +1,5 @@
 library(shiny)
+library(shinyjs)
 library(dplyr)
 library(sf)
 library(ggplot2)
@@ -25,15 +26,17 @@ SELECT_STATES <- "States: "
 SELECT_YEAR <- "Years: "
 SELECT_MONTH <- "Months: "
 
-fire_df <- read.csv('data/amazon.csv', encoding="UTF-8")
-fire_df$state <- as.factor(fire_df$state)
+BR_df <- read.csv('data/amazon.csv', encoding="UTF-8")
+BR_df$state <- as.factor(BR_df$state)
 # map_states <- get_brmap(geo = "State", class = "sf")
 # plot_brmap(map_states,
-#            data_to_join = fire_df,
+#            data_to_join = BR_df,
 #            join_by = c('nome'='state'),
-#            var = 'Number.of.Fires')
+#            var = 'Fires')
 
 ui <- fluidPage(
+  shinyjs::useShinyjs(),
+  
   titlePanel("Brazil Forest Fires"),
 
   sidebarLayout(
@@ -56,14 +59,16 @@ ui <- fluidPage(
         ), 
         multiple = TRUE
       ),
+      strong(id = 'time_setting', 'Time Setting:'),
+      materialSwitch(inputId = "time_switch", label = "", status = "primary"),
       selectizeInput(inputId = "selected_months",
                      label = SELECT_MONTH,
                      choices = MONTHS,
-                     selected = 2017),
+                     selected = 'January'),
       selectizeInput(inputId = "selected_years",
                      label = SELECT_YEAR,
                      choices = c('All', 1998:2017),
-                     selected = 2017),
+                     selected = 1998),
       actionButton(inputId = "submit_graph",label = "Submit Graph"),
     ),
     mainPanel(
@@ -100,24 +105,48 @@ server <- function(input, output) {
                    choices = opts, selected = '')
   })
   
-  
+  # Month or year option available
+  observeEvent(input$time_switch,{
+    if(input$time_switch){
+      shinyjs::hide("selected_years")
+      shinyjs::show("selected_months")
+      # runjs("$('#time_setting').html('Switch from years to months')")
+    }
+    else{
+      shinyjs::show("selected_years")
+      shinyjs::hide("selected_months")
+      # runjs("$('#time_setting').html('Switch from months to years')")
+    }
+  })
 
   observeEvent(
     input$submit_graph,
     {
       # x-axis is time
       if(input$specific_plot_type %in% c('Line Graph', 'Scatterplot - Jitter')){
+        df <- BR_df %>%
+          dplyr::filter(state %in% input$selected_states) %>%
+          {if (input$time_switch) dplyr::filter(., year %in% input$selected_years) 
+            else dplyr::filter(., month %in% input$selected_months)}
+        gg <- ggplot(df, aes(x = ifelse(input$time_switch, year, month), fires, col=state)) +
+          theme(legend.position="bottom") +
+          labs (x = paste0("Time (",
+                           ifelse(input$switch_time, "Years", "Months"),
+                           ")"),
+                y = "Value", title = "Output Variables Over Time", )
+          # colour=
+        # conditional graph type additions
+        # gg <-           geom_line() +
+        
+        
         output$plot <- renderPlot({
           options(scipen = 6)
-          ggplot(df_val, aes(Year, value, col=variable)) +
-            geom_line() +
-            theme(legend.position="bottom") +
-            labs (x = "Year", y = "Value", title = "Output Variables Over Time", colour=names(VAR_GROUPS)[[group_ind]])
+          gg
         })
       }
     })
   # Grouped bar graph
-  # ggplot(fire_df, aes(fill=states, y=fires, x=time)) + 
+  # ggplot(BR_df, aes(fill=states, y=fires, x=time)) + 
   #   geom_bar(position="dodge", stat="identity")
 }
 

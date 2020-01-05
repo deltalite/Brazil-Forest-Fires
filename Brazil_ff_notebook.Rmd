@@ -185,7 +185,7 @@ map_states <- get_brmap(geo = "State", class = "sf")
 plot_brmap(map_states,
            data_to_join = BR_fire_data,
            join_by = c('nome'='state'),
-           var = 'Number.of.Fires',) + 
+           var = 'Fires',) + 
   scale_fill_gradientn(limits = c(0,10000),
                        colours=c("#FFFF00", "#FF0000")
                        )
