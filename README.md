@@ -7,8 +7,10 @@ The app in development is a Shiny app. With a focus on spacial visualization, th
 ## Run Locally
 Shiny apps can be run locally in RStudio using the following code:
 
+```
 library(shiny)
 runGitHub("Brazil-Forest-Fires", "deltalite")
+```
 
 Use the command install.packages("<package name>") to install any packages you don't have locally. If you've downloaded the repo, RStudio should also prompt you to install any packages you are missing.
 

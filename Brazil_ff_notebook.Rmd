@@ -129,7 +129,7 @@ Mato Grosso do Sul | 150,256 | 35,406 | 164,789 | 44,406
 
 Although there is some difference in how much the states differ, these two comparisons make it look like my inference is correct. If GRW provided me with their data, the comparison could be done with more points or with visualization to make my assumptions more convincing. 
 
-The date column isn't all that necessary -- month and year are present, and you might notice that the data provider also didn't provide correct dates - they are all January 1 of whatever year. The column might otherwise be worth having, but that discreptency makes it useless. I'll work with the year and month which are consistant. 
+The date column isn't accurate - all dates are January 1 of the appropriate year. For now I will delete this column, but I will recreate using the year and month column if it's worth having in date format.
 
 After looking at the number of fires columns, you might also notice that a period is used in certain instances, often in groups and close to numbers close to 1000. This indicates they are being used in place of a comma or nothing since it's supposed to be an integer. So transformations like $1.234 \rightarrow 1234$ must be made. 
 
@@ -202,13 +202,19 @@ plot(st_geometry(readRDS('data/brazil_states.Rds')))
 
 There are multiple reasons the brazilmaps plotting could be slow. It could simply be that aggregating the data takes a long time, ggplot is slow with the geom_polygons or maybe it's the fault of the function's implementation. I've made several graphs in R with larger data and they didn't cause such long wait times, however I have not attempted choropleths with ggplot before. I can test this out with a simple table of data with the states, but I'm going to move on to plotting other graphs.
 
+After attempting to create line graphs with the months as strings, I think it's worthwhile to recreate the dates column properly. First, transform the month-names to their appropriate month-numbers, then run the following code:
+
+```{r}
+BR_df <- read.csv('data/amazon.csv', encoding="UTF-8")
+BR_df$date <- as.Date(with(BR_df, paste(year, month, '01',sep="-")), "%Y-%m-%d")
+# save (will be renamed as amazon.csv once we know it's as desired)
+# write.csv(BR_df, 'data/amazon_with_date.csv')
+BR_df
+```
+
+If this is satisfactory and the graphs can be done with only the date column, they can be deleted. For now, I will keep them until I am sure I don't need them. I'll also reorganize this notebook so that the process is clearer.
 
 ## Menu for Graph Creation
-
-
-
-
-
 
 
 
