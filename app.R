@@ -4,6 +4,7 @@ library(dplyr)
 library(sf)
 library(ggplot2)
 library(shinyWidgets)
+library(lubridate)
 # library(ggrepel)
 library(brazilmaps)
 # library(tidyverse)
@@ -21,12 +22,11 @@ DISTRIBUTION_OPTS <-  c('Histogram - Combine States', 'Histogram - Distinct Stat
 MAP_OPTS <- c('Choropleth Map')
 
 # Time
-MONTHS <- c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
 SELECT_STATES <- "States: "
 SELECT_YEAR <- "Years: "
 SELECT_MONTH <- "Months: "
 
-BR_df <- read.csv('data/amazon.csv', encoding="UTF-8")
+BR_df <- read.csv('data/amazon_with_date.csv', encoding="UTF-8")
 BR_df$state <- as.factor(BR_df$state)
 # map_states <- get_brmap(geo = "State", class = "sf")
 # plot_brmap(map_states,
@@ -57,18 +57,31 @@ ui <- fluidPage(
           size = 8,
           `selected-text-format` = "count > 3"
         ), 
-        multiple = TRUE
+        multiple = TRUE,
+        selected = STATES
       ),
       strong(id = 'time_setting', 'Time Setting:'),
       materialSwitch(inputId = "time_switch", label = "", status = "primary"),
-      selectizeInput(inputId = "selected_months",
-                     label = SELECT_MONTH,
-                     choices = MONTHS,
-                     selected = 'January'),
-      selectizeInput(inputId = "selected_years",
-                     label = SELECT_YEAR,
-                     choices = c('All', 1998:2017),
-                     selected = 1998),
+      pickerInput(inputId = "selected_months",
+                  label = SELECT_MONTH,
+                  choices = month.name,
+                  options = list(
+                    `actions-box` = TRUE, 
+                    `selected-text-format` = "count > 3",
+                    size = 8
+                    ),
+                  multiple = TRUE,
+                  selected = month.name),
+      pickerInput(inputId = "selected_years",
+                  label = SELECT_YEAR,
+                  choices = c(1998:2017),
+                  options = list(
+                    `actions-box` = TRUE,
+                    `selected-text-format` = "count > 3",
+                    size = 8
+                  ),
+                  multiple = TRUE,
+                  selected = c(1998:2017)),
       actionButton(inputId = "submit_graph",label = "Submit Graph"),
     ),
     mainPanel(
@@ -122,23 +135,41 @@ server <- function(input, output) {
   observeEvent(
     input$submit_graph,
     {
+      p_type <- input$specific_plot_type
       # x-axis is time
-      if(input$specific_plot_type %in% c('Line Graph', 'Scatterplot - Jitter')){
-        df <- BR_df %>%
-          dplyr::filter(state %in% input$selected_states) %>%
-          {if (input$time_switch) dplyr::filter(., year %in% input$selected_years) 
-            else dplyr::filter(., month %in% input$selected_months)}
-        gg <- ggplot(df, aes(x = ifelse(input$time_switch, year, month), fires, col=state)) +
+      if(p_type %in% c('Line Graph', 'Scatterplot - Jitter')){
+        # default (year) is False
+        time_measure <- ifelse(input$time_switch, 'month', 'year')
+        not_tm <- ifelse(input$time_switch, 'year', 'month')
+        if(time_measure == 'year'){
+          df <- BR_df %>%
+            dplyr::filter(., state %in% input$selected_states) %>%
+            dplyr::filter(year(date) %in% input$selected_years)
+          df <- aggregate(fires ~ year + state, data = df, sum) #~ year + month
+        }
+        else{
+          df <- BR_df %>%
+            dplyr::filter(state %in% input$selected_states) %>%
+            dplyr::filter(month(date, label = T, abbr = F) %in% input$selected_months)
+          df <- aggregate(fires ~ month + state, data = df, sum)
+        }
+        gg <- ggplot(df) +
+          # scale_x_discrete(labels=month.abb) +
           theme(legend.position="bottom") +
           labs (x = paste0("Time (",
-                           ifelse(input$switch_time, "Years", "Months"),
+                           ifelse(input$time_switch, "Months", "Years"),
                            ")"),
-                y = "Value", title = "Output Variables Over Time", )
-          # colour=
+                y = "Value", 
+                title = "Number of Fires Over Time",
+                colour = "State"
+                )
         # conditional graph type additions
-        # gg <-           geom_line() +
-        
-        
+        if(p_type == 'Line Graph'){
+          gg <- gg + geom_line(aes_string(x = time_measure, y = 'fires', color = 'state'))
+        }
+        else if(p_type == 'Scatterplot - Jitter'){
+          gg <- gg + geom_jitter(aes_string(x = time_measure, y = 'fires', color = 'state'))
+        }
         output$plot <- renderPlot({
           options(scipen = 6)
           gg
