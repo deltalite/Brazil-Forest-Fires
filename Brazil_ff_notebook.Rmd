@@ -216,6 +216,20 @@ If this is satisfactory and the graphs can be done with only the date column, th
 
 ## Menu for Graph Creation
 
+The menu has been created based off of general graph types, each with the specific graphs that will be available to users. I also added filters based on Brazilian state, year and month for now. I plan on adding a date range, because maybe a specific range is more meaningful than year totals or month totals. 
+
+I started off with the line graph, because it deals with similar aggregation and filtering that I will have to deal with in other graph types. Filtering by state was relatively easy, but properly aggregating by year or by date required me to better understand the Date type in R. I ended up using the lubridate library because it provides more versitile functions than the simple base R ones. 
+
+I had a misconception that like SQL, the dplyr group_by and summerize functions would solve my aggregation problem without incident. What I didn't understand was that the summerize function requires one value for each column in the result. I also found it difficult to use the aggregate function in the same pipe as the filters, so I ended up doing that as a seperate step. 
+
+```{r}
+# sums fire by year and by state
+aggregate(fires ~ year + state, data = df, sum)
+```
+
+The syntax might not be intuitive, but the column (or columns if you use the cbind(col1, col2,...)) before the '~' (tilde) must be numeric (or else their count will be shown instead) and are summed, by the distinct values mentioned (seperated by '+') after the tilde. Note that if you do not specify data, your columns should not be typed independent of their data.frame (write df$fires, instead of fires).
+
+
 
 
 
