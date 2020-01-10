@@ -25,6 +25,7 @@ MAP_OPTS <- c('Choropleth Map')
 SELECT_STATES <- "States: "
 SELECT_YEAR <- "Years: "
 SELECT_MONTH <- "Months: "
+TIME_SELECTIONS <- c('Select Date Range', 'View year totals', 'View month totals')
 
 BR_df <- read.csv('data/amazon_with_date.csv', encoding="UTF-8")
 BR_df$state <- as.factor(BR_df$state)
@@ -62,6 +63,10 @@ ui <- fluidPage(
       ),
       strong(id = 'time_setting', 'Time Setting:'),
       materialSwitch(inputId = "time_switch", label = "", status = "primary"),
+      selectizeInput(inputId = 'time_selection', 
+                     label = 'Select a time view:', 
+                     choices = TIME_SELECTIONS,
+                     selected = 'Select Date Range'),
       pickerInput(inputId = "selected_months",
                   label = SELECT_MONTH,
                   choices = month.name,
@@ -145,7 +150,9 @@ server <- function(input, output) {
           df <- BR_df %>%
             dplyr::filter(., state %in% input$selected_states) %>%
             dplyr::filter(year(date) %in% input$selected_years)
-          df <- aggregate(fires ~ year + state, data = df, sum) #~ year + month
+          if(p_type == 'Line Graph'){
+            df <- aggregate(fires ~ year + state, data = df, sum) #~ year + month
+          }
         }
         else{
           df <- BR_df %>%
