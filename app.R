@@ -25,10 +25,11 @@ MAP_OPTS <- c('Choropleth Map')
 SELECT_STATES <- "States: "
 SELECT_YEAR <- "Years: "
 SELECT_MONTH <- "Months: "
-TIME_SELECTIONS <- c('Select Date Range', 'View year totals', 'View month totals')
+TIME_SELECTIONS <- c('Select date range', 'View year totals', 'View month totals')
 
 BR_df <- read.csv('data/amazon_with_date.csv', encoding="UTF-8")
 BR_df$state <- as.factor(BR_df$state)
+BR_df$date <- as.Date(BR_df$date)
 # map_states <- get_brmap(geo = "State", class = "sf")
 # plot_brmap(map_states,
 #            data_to_join = BR_df,
@@ -61,32 +62,14 @@ ui <- fluidPage(
         multiple = TRUE,
         selected = STATES
       ),
-      strong(id = 'time_setting', 'Time Setting:'),
-      materialSwitch(inputId = "time_switch", label = "", status = "primary"),
+      hr(),
+      strong(id = 'time_setting', 'Time Settings:'),
+      # materialSwitch(inputId = "time_switch", label = "", status = "primary"),
       selectizeInput(inputId = 'time_selection', 
                      label = 'Select a time view:', 
                      choices = TIME_SELECTIONS,
                      selected = 'Select Date Range'),
-      pickerInput(inputId = "selected_months",
-                  label = SELECT_MONTH,
-                  choices = month.name,
-                  options = list(
-                    `actions-box` = TRUE, 
-                    `selected-text-format` = "count > 3",
-                    size = 8
-                    ),
-                  multiple = TRUE,
-                  selected = month.name),
-      pickerInput(inputId = "selected_years",
-                  label = SELECT_YEAR,
-                  choices = c(1998:2017),
-                  options = list(
-                    `actions-box` = TRUE,
-                    `selected-text-format` = "count > 3",
-                    size = 8
-                  ),
-                  multiple = TRUE,
-                  selected = c(1998:2017)),
+      uiOutput("time_filter"),
       actionButton(inputId = "submit_graph",label = "Submit Graph"),
     ),
     mainPanel(
@@ -124,8 +107,46 @@ server <- function(input, output) {
   })
   
   # Month or year option available
-  observeEvent(input$time_switch,{
-    if(input$time_switch){
+  output$time_filter <- renderUI({
+    if(input$time_selection == 'Select date range'){
+      tagList(
+        dateInput(inputId = 'beg_date', 
+                  label = 'From:',
+                  value = '1998-01-01',
+                  startview = "month"),
+        dateInput(inputId = 'end_date', 
+                  label = "To:", 
+                  value = '2017-12-31', 
+                  startview = "month")
+      )
+    }
+    else if(input$time_selection == 'View year totals'){
+      pickerInput(inputId = "selected_years",
+                  label = SELECT_YEAR,
+                  choices = c(1998:2017),
+                  options = list(
+                    `actions-box` = TRUE,
+                    `selected-text-format` = "count > 3",
+                    size = 8
+                  ),
+                  multiple = TRUE,
+                  selected = c(1998:2017))
+    }
+    else if(input$time_selection == 'View month totals'){
+      pickerInput(inputId = "selected_months",
+                  label = SELECT_MONTH,
+                  choices = month.name,
+                  options = list(
+                    `actions-box` = TRUE, 
+                    `selected-text-format` = "count > 3",
+                    size = 8
+                  ),
+                  multiple = TRUE,
+                  selected = month.name)
+    }
+  })
+  observeEvent(input$time_selection,{
+    if(input$time_selection == 'Select date range'){
       shinyjs::hide("selected_years")
       shinyjs::show("selected_months")
       # runjs("$('#time_setting').html('Switch from years to months')")
@@ -144,24 +165,32 @@ server <- function(input, output) {
       # x-axis is time
       if(p_type %in% c('Line Graph', 'Scatterplot - Jitter')){
         # default (year) is False
-        time_measure <- ifelse(input$time_switch, 'month', 'year')
-        not_tm <- ifelse(input$time_switch, 'year', 'month')
-        if(time_measure == 'year'){
+        time_measure <- input$time_selection
+        if(time_measure == TIME_SELECTIONS[1]){
           df <- BR_df %>%
             dplyr::filter(., state %in% input$selected_states) %>%
+            dplyr::filter(between(as.Date(date), input$beg_date, input$end_date))
+        }
+        else if(time_measure == TIME_SELECTIONS[2]){
+          df <- BR_df %>%
+            dplyr::filter(state %in% input$selected_states) %>%
             dplyr::filter(year(date) %in% input$selected_years)
           if(p_type == 'Line Graph'){
-            df <- aggregate(fires ~ year + state, data = df, sum) #~ year + month
+            df <- aggregate(fires ~ year + state, data = df, sum)
           }
         }
-        else{
+        else if(time_measure == TIME_SELECTIONS[3]){
           df <- BR_df %>%
             dplyr::filter(state %in% input$selected_states) %>%
             dplyr::filter(month(date, label = T, abbr = F) %in% input$selected_months)
-          df <- aggregate(fires ~ month + state, data = df, sum)
+          if(p_type == 'Line Graph'){
+            df <- aggregate(fires ~ month + state, data = df, sum)
+          }
+        }
+        else{
+          throw("Invalid time setting: ", time_measure)
         }
         gg <- ggplot(df) +
-          # scale_x_discrete(labels=month.abb) +
           theme(legend.position="bottom") +
           labs (x = paste0("Time (",
                            ifelse(input$time_switch, "Months", "Years"),
@@ -172,10 +201,16 @@ server <- function(input, output) {
                 )
         # conditional graph type additions
         if(p_type == 'Line Graph'){
-          gg <- gg + geom_line(aes_string(x = time_measure, y = 'fires', color = 'state'))
+          gg <- gg + geom_line(aes_string(
+            x = time_col(time_measure),
+            y = 'fires',
+            color = 'state'))
         }
         else if(p_type == 'Scatterplot - Jitter'){
-          gg <- gg + geom_jitter(aes_string(x = time_measure, y = 'fires', color = 'state'))
+          gg <- gg + geom_jitter(aes_string(
+            x = time_col(time_measure),
+            y = 'fires',
+            color = 'state'))
         }
         output$plot <- renderPlot({
           options(scipen = 6)
@@ -189,7 +224,17 @@ server <- function(input, output) {
 }
 
 
-
+time_col <- function(time_measure){
+  if(time_measure == TIME_SELECTIONS[1]){
+    return("date")
+  }
+  else if(time_measure == TIME_SELECTIONS[2]){
+    return('year')
+  }
+  else{
+    return('month')
+  }
+}
 
 
 shinyApp(ui = ui, server = server)

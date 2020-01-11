@@ -229,7 +229,15 @@ aggregate(fires ~ year + state, data = df, sum)
 
 The syntax might not be intuitive, but the column (or columns if you use the cbind(col1, col2,...)) before the '~' (tilde) must be numeric (or else their count will be shown instead) and are summed, by the distinct values mentioned (seperated by '+') after the tilde. Note that if you do not specify data, your columns should not be typed independent of their data.frame (write df$fires, instead of fires).
 
+### Line & Jitter Graphs
+For this app, I'm giving the Line and Jitter graph the same options, namely choosing a date range, summing (grouping for jitter) by month or year and selecting which states and months/years to include. After a bit of time deliberating on the menu options, I have to say it turned out quite well.
 
+I should say, I had a simple-but-difficult-to-find error with the x-axis because the date column was not actually being read as a date by default. I handle this on app start with the line:
+```{r}
+BR_df$date <- as.Date(BR_df$date)
+```
+
+Note: If you select a date range with the Jitter plot, you will end up with a normal scatter plot since data points are not grouped. 
 
 
 
