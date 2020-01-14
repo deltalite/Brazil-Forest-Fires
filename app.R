@@ -193,7 +193,7 @@ server <- function(input, output) {
         gg <- ggplot(df) +
           theme(legend.position="bottom") +
           labs (x = paste0("Time (",
-                           ifelse(input$time_switch, "Months", "Years"),
+                           time_col(time_measure),
                            ")"),
                 y = "Value", 
                 title = "Number of Fires Over Time",
