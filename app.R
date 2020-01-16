@@ -110,14 +110,16 @@ server <- function(input, output) {
   output$time_filter <- renderUI({
     if(input$time_selection == 'Select date range'){
       tagList(
-        dateInput(inputId = 'beg_date', 
-                  label = 'From:',
-                  value = '1998-01-01',
-                  startview = "month"),
-        dateInput(inputId = 'end_date', 
-                  label = "To:", 
-                  value = '2017-12-31', 
-                  startview = "month")
+        splitLayout(
+          dateInput(inputId = 'beg_date', 
+                    label = 'From:',
+                    value = '1998-01-01',
+                    startview = "month"),
+          dateInput(inputId = 'end_date', 
+                    label = "To:", 
+                    value = '2017-12-31', 
+                    startview = "month")
+        )
       )
     }
     else if(input$time_selection == 'View year totals'){
