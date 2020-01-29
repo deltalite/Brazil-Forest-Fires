@@ -16,7 +16,7 @@ STATES <- c('ACRE', 'ALAGOAS', "AMAPÁ", 'AMAZONAS', 'BAHIA', 'CEARÁ', 'DISTRIT
 
 # Graphs
 GRAPH_GENERAL_TYPE <- c('Comparison', 'Composition', 'Distribution', 'Map')
-COMPARISON_OPTS <-  c('Bar Graph - Compare States', 'Bar Graph - Compare Years', 'Boxplot - Compare States', 'Boxplot - Compare Years', 'Grouped Bar Graph', 'Line Graph', 'Scatterplot - Jitter') # coord_flip()
+COMPARISON_OPTS <-  c('Bar Graph - Compare States', 'Bar Graph - Compare States Over Time', 'Boxplot - Compare States', 'Grouped Bar Graph', 'Line Graph', 'Scatterplot - Jitter') # coord_flip()
 COMPOSITION_OPTS <-  c('Pie Chart', 'Treemap') # 'Stacked Bar Graph', 
 DISTRIBUTION_OPTS <-  c('Histogram - Combine States', 'Histogram - Distinct States')
 MAP_OPTS <- c('Choropleth Map')
@@ -165,7 +165,7 @@ server <- function(input, output) {
     {
       p_type <- input$specific_plot_type
       # x-axis is time
-      if(p_type %in% c('Line Graph', 'Scatterplot - Jitter')){
+      if(p_type %in% c('Line Graph', 'Scatterplot - Jitter', 'Bar Graph - Compare States Over Time')){
         # default (year) is False
         time_measure <- input$time_selection
         if(time_measure == TIME_SELECTIONS[1]){
@@ -214,10 +214,22 @@ server <- function(input, output) {
             y = 'fires',
             color = 'state'))
         }
+        else if(p_type == 'Bar Graph - Compare States Over Time'){
+          gg <- gg + 
+            geom_bar(position="dodge", 
+                     stat="identity", 
+                     aes_string(
+                       x = time_col(time_measure),
+                       y = 'fires',
+                       fill = 'state'))
+        }
         output$plot <- renderPlot({
           options(scipen = 6)
           gg
         })
+      }
+      else if(p_type %in% c('Bar Graph - Compare States')){
+        
       }
     })
   # Grouped bar graph

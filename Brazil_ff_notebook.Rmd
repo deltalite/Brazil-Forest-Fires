@@ -239,6 +239,9 @@ BR_df$date <- as.Date(BR_df$date)
 
 Note: If you select a date range with the Jitter plot, you will end up with a normal scatter plot since data points are not grouped. 
 
+### Bar Graph Over Time
+Not a challenge, since the data is grouped in a similar manner to the Jitter graph. Similar to basically all ggplots, geom_bar was what needed to be added to the base ggplot object I created a couple steps before displaying. For aesthetics ("aes"), fill is what the state column was assigned to in order to seperate their data. The other bar graph I plan on creating could probably fit in the same condition statement that the previous three graphs went in, but I plan on seperating it with more similar graphs (focus on which state the data comes from) for readability purposes.
+
 
 
 
