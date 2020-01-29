@@ -242,6 +242,32 @@ Note: If you select a date range with the Jitter plot, you will end up with a no
 ### Bar Graph Over Time
 Not a challenge, since the data is grouped in a similar manner to the Jitter graph. Similar to basically all ggplots, geom_bar was what needed to be added to the base ggplot object I created a couple steps before displaying. For aesthetics ("aes"), fill is what the state column was assigned to in order to seperate their data. The other bar graph I plan on creating could probably fit in the same condition statement that the previous three graphs went in, but I plan on seperating it with more similar graphs (focus on which state the data comes from) for readability purposes.
 
+### Comparing States
+After creating the boxplot and bar graph to compare states, I noticed that if you had a lot of brazilian states, the labels overlapped which didn't look too great. One option was rotating the labels, but the labels centered themselves.
+
+```{r, fig.width=14, fig.height=12, echo=F}
+BR_df <- read.csv('data/amazon_with_date.csv', encoding="UTF-8")
+BR_df$state <- as.factor(BR_df$state)
+BR_df$date <- as.Date(BR_df$date)
+df <- BR_df
+df <- aggregate(fires ~ state, data = df, sum)
+gg <- ggplot(df) +
+  theme(legend.position="bottom") +
+  labs (x = "Brazilian States",
+        y = "Value", 
+        title = "Number of Fires in all data by State",
+        colour = "State") +
+        theme(axis.text.x = element_text(angle = 90))
+gg <- gg + 
+  geom_bar(stat = "identity", 
+           aes_string(
+             x = 'state',
+             y = 'fires',
+             fill = 'state'))
+gg
+```
+
+As a result, I've flipped the two mentioned graphs so that the labelling looks better. This was suggested on [StackOverflow](https://stackoverflow.com/questions/41568411/how-to-maintain-size-of-ggplot-with-long-labels) by Uwe. I think it looks better the way the graph currently is, but I'll add an option to flip coordinates or not eventually. 
 
 
 

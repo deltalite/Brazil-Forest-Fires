@@ -20,6 +20,8 @@ COMPARISON_OPTS <-  c('Bar Graph - Compare States', 'Bar Graph - Compare States 
 COMPOSITION_OPTS <-  c('Pie Chart', 'Treemap') # 'Stacked Bar Graph', 
 DISTRIBUTION_OPTS <-  c('Histogram - Combine States', 'Histogram - Distinct States')
 MAP_OPTS <- c('Choropleth Map')
+# Graph type vectors
+GRAPH_BY_STATE <- c('Bar Graph - Compare States', 'Boxplot - Compare States')
 
 # Time
 SELECT_STATES <- "States: "
@@ -68,7 +70,7 @@ ui <- fluidPage(
       selectizeInput(inputId = 'time_selection', 
                      label = 'Select a time view:', 
                      choices = TIME_SELECTIONS,
-                     selected = 'Select Date Range'),
+                     selected = TIME_SELECTIONS[1]),
       uiOutput("time_filter"),
       actionButton(inputId = "submit_graph",label = "Submit Graph"),
     ),
@@ -82,7 +84,7 @@ ui <- fluidPage(
 )
 
 
-server <- function(input, output) {
+server <- function(input, output, session) {
   
   # Reactive specific plot list
   output$specific_plot_type = renderUI({
@@ -108,7 +110,7 @@ server <- function(input, output) {
   
   # Month or year option available
   output$time_filter <- renderUI({
-    if(input$time_selection == 'Select date range'){
+    if(input$time_selection == TIME_SELECTIONS[1]){
       tagList(
         splitLayout(
           dateInput(inputId = 'beg_date', 
@@ -122,7 +124,7 @@ server <- function(input, output) {
         )
       )
     }
-    else if(input$time_selection == 'View year totals'){
+    else if(input$time_selection == TIME_SELECTIONS[2]){
       pickerInput(inputId = "selected_years",
                   label = SELECT_YEAR,
                   choices = c(1998:2017),
@@ -134,7 +136,7 @@ server <- function(input, output) {
                   multiple = TRUE,
                   selected = c(1998:2017))
     }
-    else if(input$time_selection == 'View month totals'){
+    else if(input$time_selection == TIME_SELECTIONS[3]){
       pickerInput(inputId = "selected_months",
                   label = SELECT_MONTH,
                   choices = month.name,
@@ -147,18 +149,22 @@ server <- function(input, output) {
                   selected = month.name)
     }
   })
-  observeEvent(input$time_selection,{
-    if(input$time_selection == 'Select date range'){
-      shinyjs::hide("selected_years")
-      shinyjs::show("selected_months")
-      # runjs("$('#time_setting').html('Switch from years to months')")
-    }
+  
+  observeEvent(input$specific_plot_type,{
+    if(input$specific_plot_type %in% GRAPH_BY_STATE){
+      updateSelectizeInput(session,
+                           "time_selection",
+                           choices = c(TIME_SELECTIONS[1]),
+                           selected = TIME_SELECTIONS[1]
+    )}
     else{
-      shinyjs::show("selected_years")
-      shinyjs::hide("selected_months")
-      # runjs("$('#time_setting').html('Switch from months to years')")
+      updateSelectizeInput(session,
+                           "time_selection",
+                           choices = TIME_SELECTIONS,
+                           selected = TIME_SELECTIONS[1]
+      )}
     }
-  })
+  )
 
   observeEvent(
     input$submit_graph,
@@ -221,15 +227,56 @@ server <- function(input, output) {
                      aes_string(
                        x = time_col(time_measure),
                        y = 'fires',
-                       fill = 'state'))
+                       color = 'state'))
         }
         output$plot <- renderPlot({
           options(scipen = 6)
           gg
         })
       }
-      else if(p_type %in% c('Bar Graph - Compare States')){
-        
+      
+      # x-axis is states
+      else if(p_type %in% GRAPH_BY_STATE){
+        df <- BR_df %>%
+          dplyr::filter(state %in% input$selected_states) %>%
+          dplyr::filter(between(as.Date(date), input$beg_date, input$end_date))
+        if(p_type == GRAPH_BY_STATE[1]){
+          df <- aggregate(fires ~ state, data = df, sum)
+        }
+        gg <- ggplot(df) +
+          theme(legend.position="bottom") +
+          labs (x = "Brazilian States",
+                y = "Value", 
+                title = paste0("Number of Fires From",
+                               input$beg_date,
+                               "to",
+                               input$end_date, 
+                               collapse = ' '),
+                colour = "State") +
+          # theme(axis.text.x = element_text(angle = 90))
+          coord_flip()
+        # conditional graph type additions
+        if(p_type == GRAPH_BY_STATE[1]){
+          gg <- gg + 
+            geom_bar(stat = "identity", 
+                     aes_string(
+                       x = 'state',
+                       y = 'fires',
+                       fill = 'state'))
+        }
+        else if(p_type == GRAPH_BY_STATE[2]){
+          gg <- gg + 
+            geom_boxplot(outlier.colour="black", 
+                         outlier.shape=19,
+                         aes_string(
+                           x = 'state',
+                           y = 'fires',
+                           color = 'state'))
+        }
+        output$plot <- renderPlot({
+          options(scipen = 6)
+          gg
+        })
       }
     })
   # Grouped bar graph
