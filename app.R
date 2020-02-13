@@ -57,12 +57,14 @@ ui <- fluidPage(
         label = SELECT_STATES, 
         choices = STATES,
         options = list(
+          # Looks ugly for comparison graphs with too many states
+          # `maxOptions` = ?
           `actions-box` = TRUE, 
           size = 8,
           `selected-text-format` = "count > 3"
         ), 
         multiple = TRUE,
-        selected = STATES
+        selected = c('AMAZONAS','PARANÁ', 'RIO DE JANEIRO', 'SÃO PAULO')
       ),
       hr(),
       strong(id = 'time_setting', 'Time Settings:'),
@@ -76,9 +78,9 @@ ui <- fluidPage(
     ),
     mainPanel(
       div(id = 'plot_div',
-        plotOutput('plot')
-        
-      )
+          style = "min-height: 300px;",
+          plotOutput('plot')
+          )
     )
   )
 )
@@ -203,7 +205,7 @@ server <- function(input, output, session) {
           labs (x = paste0("Time (",
                            time_col(time_measure),
                            ")"),
-                y = "Value", 
+                y = "Number of Fires", 
                 title = "Number of Fires Over Time",
                 colour = "State"
                 )
@@ -246,15 +248,13 @@ server <- function(input, output, session) {
         gg <- ggplot(df) +
           theme(legend.position="bottom") +
           labs (x = "Brazilian States",
-                y = "Value", 
-                title = paste0("Number of Fires From",
+                y = "Number of Fires", 
+                title = paste0("Number of Fires From ",
                                input$beg_date,
-                               "to",
+                               " to ",
                                input$end_date, 
                                collapse = ' '),
-                colour = "State") +
-          # theme(axis.text.x = element_text(angle = 90))
-          coord_flip()
+                colour = "State") 
         # conditional graph type additions
         if(p_type == GRAPH_BY_STATE[1]){
           gg <- gg + 
@@ -262,7 +262,8 @@ server <- function(input, output, session) {
                      aes_string(
                        x = 'state',
                        y = 'fires',
-                       fill = 'state'))
+                       fill = 'state')) +
+            coord_flip()
         }
         else if(p_type == GRAPH_BY_STATE[2]){
           gg <- gg + 
@@ -271,7 +272,8 @@ server <- function(input, output, session) {
                          aes_string(
                            x = 'state',
                            y = 'fires',
-                           color = 'state'))
+                           color = 'state')) +
+            theme(axis.text.x = element_text(angle = 90))
         }
         output$plot <- renderPlot({
           options(scipen = 6)

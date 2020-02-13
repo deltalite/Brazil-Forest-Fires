@@ -267,7 +267,7 @@ gg <- gg +
 gg
 ```
 
-As a result, I've flipped the two mentioned graphs so that the labelling looks better. This was suggested on [StackOverflow](https://stackoverflow.com/questions/41568411/how-to-maintain-size-of-ggplot-with-long-labels) by Uwe. I think it looks better the way the graph currently is, but I'll add an option to flip coordinates or not eventually. 
+As a result, I've flipped the above graph so that the labelling looks better. Boxplot doesn't look to good with its coordinates flipped, so I'll keep it with just the rotated names. These modifications was suggested on [StackOverflow](https://stackoverflow.com/questions/41568411/how-to-maintain-size-of-ggplot-with-long-labels) by Uwe. I think it looks better the way the graph initially was, but I'll look into further UI improvements/custimizations later. 
 
 
 
