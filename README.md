@@ -18,4 +18,4 @@ library(shiny)
 runGitHub("Brazil-Forest-Fires", "deltalite")
 ```
 
-Use the command install.packages("<package name>") to install any packages you don't have locally. If you've downloaded the repo, RStudio may also prompt you to install any packages you are missing. 
+Required packages will automatically start installing if they are not currently installed in your local environment.
