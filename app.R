@@ -1,14 +1,13 @@
+# Load or install required packages
 if(!require(shiny)){install.packages("shiny")}
-library(shiny)
-library(shinyjs)
-library(dplyr)
-library(sf)
-library(ggplot2)
-library(shinyWidgets)
-library(lubridate)
+if(!require(shinyjs)){install.packages("shinyjs")}
+if(!require(dplyr)){install.packages("dplyr")}
+if(!require(sf)){install.packages("sf")}
+if(!require(ggplot2)){install.packages("ggplot2")}
+if(!require(shinyWidgets)){install.packages("shinyWidgets")}
+if(!require(lubridate)){install.packages("lubridate")}
+if(!require(brazilmaps)){install.packages("brazilmaps")}
 # library(ggrepel)
-library(brazilmaps)
-# library(tidyverse)
 
 
 # Constants
