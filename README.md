@@ -14,7 +14,7 @@ The app in development is a Shiny app. With a focus on visualization, the app wi
 Shiny apps can be run locally in RStudio using the following code:
 
 ```
-library(shiny)
+if(!require(shiny)){install.packages("shiny")}
 runGitHub("Brazil-Forest-Fires", "deltalite")
 ```
 
