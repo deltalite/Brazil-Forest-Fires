@@ -7,6 +7,7 @@ if(!require(ggplot2)){install.packages("ggplot2")}
 if(!require(shinyWidgets)){install.packages("shinyWidgets")}
 if(!require(lubridate)){install.packages("lubridate")}
 if(!require(brazilmaps)){install.packages("brazilmaps")}
+if(!require(reshape2)){install.packages("reshape2")}
 # library(ggrepel)
 
 
@@ -16,12 +17,12 @@ STATES <- c('ACRE', 'ALAGOAS', "AMAPÁ", 'AMAZONAS', 'BAHIA', 'CEARÁ', 'DISTRIT
 
 # Graphs
 GRAPH_GENERAL_TYPE <- c('Comparison', 'Composition', 'Distribution', 'Map')
-COMPARISON_OPTS <-  c('Bar Graph - Compare States', 'Bar Graph - Compare States Over Time', 'Boxplot - Compare States', 'Grouped Bar Graph', 'Line Graph', 'Scatterplot - Jitter') # coord_flip()
+COMPARISON_OPTS <-  c('Bar Graph - Compare State Totals', 'Bar Graph - Compare States Over Time', 'Boxplot - Compare States', 'Line Graph', 'Scatterplot - Jitter') # coord_flip()
 COMPOSITION_OPTS <-  c('Pie Chart', 'Treemap') # 'Stacked Bar Graph', 
 DISTRIBUTION_OPTS <-  c('Histogram - Combine States', 'Histogram - Distinct States')
 MAP_OPTS <- c('Choropleth Map')
 # Graph type vectors
-GRAPH_BY_STATE <- c('Bar Graph - Compare States', 'Boxplot - Compare States')
+GRAPH_BY_STATE <- c('Bar Graph - Compare State Totals', 'Boxplot - Compare States')
 
 # Time
 SELECT_STATES <- "States: "
@@ -173,7 +174,9 @@ server <- function(input, output, session) {
     {
       p_type <- input$specific_plot_type
       # x-axis is time
-      if(p_type %in% c('Line Graph', 'Scatterplot - Jitter', 'Bar Graph - Compare States Over Time')){
+      if(p_type %in% c('Line Graph', 
+                       'Scatterplot - Jitter', 
+                       'Bar Graph - Compare States Over Time')){
         # default (year) is False
         time_measure <- input$time_selection
         if(time_measure == TIME_SELECTIONS[1]){
@@ -187,6 +190,9 @@ server <- function(input, output, session) {
             dplyr::filter(year(date) %in% input$selected_years)
           if(p_type == 'Line Graph'){
             df <- aggregate(fires ~ year + state, data = df, sum)
+          }
+          else if(p_type == 'Bar Graph - Compare States Over Time'){
+            df <- aggregate(df['fires'], by=df[c('year','state')], sum)
           }
         }
         else if(time_measure == TIME_SELECTIONS[3]){
@@ -229,7 +235,11 @@ server <- function(input, output, session) {
                      aes_string(
                        x = time_col(time_measure),
                        y = 'fires',
-                       color = 'state'))
+                       fill = 'state'))
+        }
+        # Add month labels if group by month
+        if(time_measure == TIME_SELECTIONS[3]){
+          gg <- gg + scale_x_discrete(limits = month.abb)
         }
         output$plot <- renderPlot({
           options(scipen = 6)
@@ -272,18 +282,20 @@ server <- function(input, output, session) {
                          aes_string(
                            x = 'state',
                            y = 'fires',
-                           color = 'state')) +
-            theme(axis.text.x = element_text(angle = 90))
+                           color = 'state')) 
+          if(length(input$selected_states) > 8){
+            gg <- gg +
+              theme(axis.text.x = element_text(angle = 90))
+          }
         }
         output$plot <- renderPlot({
           options(scipen = 6)
           gg
         })
       }
+      
+      
     })
-  # Grouped bar graph
-  # ggplot(BR_df, aes(fill=states, y=fires, x=time)) + 
-  #   geom_bar(position="dodge", stat="identity")
 }
 
 
